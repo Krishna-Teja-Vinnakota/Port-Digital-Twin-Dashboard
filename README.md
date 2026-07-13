@@ -1,93 +1,202 @@
-# Port-Digital-Twin-Dashboard-Implementation
+## Port ICCC — Developer Guide
 
+This guide explains how to set up and run the Port ICCC project locally after cloning the repository. It covers the Next.js frontend (app/), the AIS relay microservice (ais-relay-server/), and the OpenCV/YOLOv8 microservice (opencv-service/).
 
+## Table of contents
+- Prerequisites
+- Quick start (Windows PowerShell)
+- Running the Next.js app
+- Running the AIS relay microservice
+- Running the OpenCV microservice (Python)
+- Environment variables
+- Testing and linting
+- Troubleshooting & tips
+- Next steps / optional improvements
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Prerequisites
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Node.js (v18+ recommended) and npm installed. Verify with:
 
-## Add your files
+  node --version
+  npm --version
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+- Python 3.10+ (for the OpenCV service). Verify with:
 
-```
-cd existing_repo
-git remote add origin https://github.com/Krishna-Teja-Vinnakota/Port-Digital-Twin-Dashboard.git
-git branch -M main
-git push -uf origin main
-```
+  python --version
 
-## Integrate with your tools
+- Recommended (optional): a virtual environment tool for Python (venv, virtualenv, conda).
 
-* [Set up project integrations](https://github.com/Krishna-Teja-Vinnakota/Port-Digital-Twin-Dashboard/-/settings/integrations)
+Notes:
+- This repository contains three runnable parts:
+  - Next.js frontend (root) — development server, build, tests.
+  - AIS relay (Node.js) — a small WebSocket/HTTP relay in `ais-relay-server/`.
+  - OpenCV microservice (FastAPI/Python) — in `opencv-service/`.
 
-## Collaborate with your team
+---
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## Quick start (Windows PowerShell)
 
-## Test and Deploy
+Clone the repo and install dependencies for the frontend:
 
-Use the built-in continuous integration in GitLab.
+  git clone <repo-url>
+  cd "Port CCC_updated"
+  npm install
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+Start the Next.js dev server (root):
 
-***
+  npm run dev
 
-# Editing this README
+Open your browser at http://localhost:3000.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+To run AIS relay and OpenCV services (recommended in separate terminals):
 
-## Suggestions for a good README
+  # Terminal 1 (AIS relay)
+  cd ais-relay-server
+  npm install
+  $env:PORT=3001; $env:AIS_STREAM_KEY='your_key_here'
+  node index.js
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+  # Terminal 2 (OpenCV service)
+  cd opencv-service
+  python -m venv .venv
+  .\.venv\Scripts\Activate.ps1
+  pip install -r requirements.txt
+  # Run in demo mode (no camera feeds):
+  uvicorn main:app --host 0.0.0.0 --port 8000
 
-## Name
-Choose a self-explaining name for your project.
+By default the frontend uses simulation data. To point it at the OpenCV service, set `OPENCV_SERVICE_URL` in your environment (or in Netlify when deployed):
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+  $env:OPENCV_SERVICE_URL='http://localhost:8000'
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+---
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## Running the Next.js app (frontend)
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+From the repository root:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+  npm install
+  npm run dev
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Available scripts (from `package.json`):
+- `dev` — start Next.js dev server (next dev)
+- `build` — build for production (next build)
+- `start` — start built app (next start)
+- `lint` — run ESLint
+- `typecheck` — run TypeScript type-checker
+- `test` — run Vitest tests
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+When building for production, run:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+  npm run build
+  npm start
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+If you need to set environment variables for Next.js in development, prefix them or use PowerShell's `$env:` as shown above.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+---
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## AIS relay microservice
 
-## License
-For open source projects, say how it is licensed.
+Purpose: connects to aisstream.io via WebSocket and exposes `/api/vessels` and `/health` endpoints for the frontend to consume.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Location: `ais-relay-server/index.js`
+
+Prereqs: Node.js and an AIS_STREAM_KEY (from aisstream.io)
+
+Install and run (PowerShell):
+
+  cd ais-relay-server
+  npm install
+  $env:PORT=3001; $env:AIS_STREAM_KEY='your_key_here'
+  node index.js
+
+Health: http://localhost:3001/health
+Vessels API: http://localhost:3001/api/vessels
+
+Note: If `AIS_STREAM_KEY` is not set the relay prints an error and will not connect; the frontend will continue using simulated vessel data.
+
+---
+
+## OpenCV microservice (FastAPI + YOLOv8)
+
+Purpose: runs OpenCV + YOLOv8 analysis and exposes `/api/analytics/latest`.
+
+Location: `opencv-service/main.py`
+
+Requirements: Python 3.10+, see `opencv-service/requirements.txt`.
+This service relies on CPU-bound ML libraries (ultralytics, opencv) and can be heavy to install on Windows. For local development you can run it in demo mode (no CAMERA_FEEDS) which only needs the requirements installed but won't open camera streams.
+
+Setup (PowerShell):
+
+  cd opencv-service
+  python -m venv .venv
+  .\.venv\Scripts\Activate.ps1
+  pip install -r requirements.txt
+
+Run (demo mode):
+
+  uvicorn main:app --host 0.0.0.0 --port 8000
+
+Run (with camera feeds):
+
+  $env:CAMERA_FEEDS='gate_1:rtsp://user:pw@192.168.x.x:554/stream1,perimeter:rtsp://192.168.x.x:554/stream2'
+  uvicorn main:app --host 0.0.0.0 --port 8000
+
+Notes and tips:
+- The `ultralytics` model downloads YOLO weights (`yolov8n.pt`) on first run.
+- On Windows, OpenCV/video capture from RTSP can be tricky. Running the service in WSL2 or a Linux container often works better for camera access.
+- If you only want UI integration, you can set `OPENCV_SERVICE_URL` to the deployed service URL or leave it unset to use simulation fallback in the frontend.
+
+---
+
+## Environment variables (summary)
+
+- Frontend / runtime (Next.js):
+  - `NEXT_PUBLIC_POC_MODE` — optional, show POC UI flows.
+  - `OPENCV_SERVICE_URL` — URL to the opencv-service (e.g., https://your-service.onrender.com). If unset the UI uses a simulated analytics fallback.
+
+- AIS Relay:
+  - `AIS_STREAM_KEY` — API key for aisstream.io (required to actually stream AIS messages).
+  - `PORT` — optional (defaults to 3001 in the relay script).
+
+- OpenCV service (Render / local):
+  - `CAMERA_FEEDS` — comma-separated zone:rtsp_url pairs. If missing the service runs in demo mode.
+  - `PORT` — port for uvicorn; default examples use 8000 locally.
+
+---
+
+## Testing and linting
+
+From repo root:
+
+  npm install
+  npm run test
+  npm run lint
+  npm run typecheck
+
+Tests use Vitest (see `vitest.config.ts`). There are unit tests under `lib/__tests__/`.
+
+---
+
+## Troubleshooting & tips
+
+- Frontend port: Next.js dev server runs on port 3000 by default. If port conflicts occur, stop the process using that port or change the env setup.
+- OpenCV on Windows: if RTSP capture fails, consider WSL2 or running the Python service in a Docker container or a Linux VM.
+- AIS relay: if you don't have an `AIS_STREAM_KEY`, the relay will not stream; the frontend will show simulated vessel data instead.
+- Dependency problems: remove `node_modules` and reinstall `npm ci` for consistent installs.
+
+---
+
+## Next steps / optional improvements
+
+- Add a `docker-compose.yml` that wires the Next.js app, ais-relay-server, and opencv-service for easy local composition.
+- Add `.env.example` files for both Node and Python services with sample values.
+- Add a small script to the root `package.json` to launch all local services in parallel (concurrently or using `npm-run-all`).
+
+---
+
+If you'd like, I can:
+- add a `docker-compose.yml` for local development,
+- create `.env.example` files for `ais-relay-server` and `opencv-service`, or
+- add a `dev` helper script that starts all required services in separate terminals.
