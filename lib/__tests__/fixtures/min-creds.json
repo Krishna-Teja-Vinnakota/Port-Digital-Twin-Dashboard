@@ -1,0 +1,6 @@
+{
+  "type": "service_account",
+  "project_id": "test-port-forecast",
+  "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEtest\n-----END RSA PRIVATE KEY-----\n",
+  "client_email": "test@example.iam.gserviceaccount.com"
+}
